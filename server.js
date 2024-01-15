@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const app = express();
 const apiRouter = require('./routes/api');
 const cookieParser = require('cookie-parser');
@@ -12,6 +13,7 @@ if (!MONGO_URL) {
     process.exit(1);
 }
 
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/api', apiRouter);
