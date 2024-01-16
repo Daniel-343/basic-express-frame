@@ -9,7 +9,7 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh 'docker build -t basic-express-frame -f basic-express-frame/Dockerfile.'
+        sh 'docker build -t basic-express-frame .'
       }
     }
 
