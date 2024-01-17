@@ -73,6 +73,7 @@ echo "Task definition updated with the new image tag."
     --region $AWS_REGION \\
     --cluster $ECS_CLUSTER_NAME \\
     --service $ECS_SERVICE_NAME \\
+    --task-definition $TASK_DEFINITION_FAMILY\\
     --force-new-deployment
 
 echo "ECS service updated with the new Docker image."'''
