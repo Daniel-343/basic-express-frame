@@ -9,9 +9,6 @@ pipeline {
 
     stage('Build') {
       agent any
-      environment {
-        DOCKER_IMAGE_NAME = 'basic-express-app'
-      }
       steps {
         sh 'docker build -t "${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}" .'
       }
@@ -33,5 +30,8 @@ echo "Docker image uploaded to ECR successfully!"'''
       }
     }
 
+  }
+  environment {
+    DOCKER_IMAGE_NAME = 'basic-express-app'
   }
 }
