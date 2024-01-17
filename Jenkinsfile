@@ -50,7 +50,7 @@ existing_task_definition=$(aws ecs describe-task-definition \\
   --task-definition $TASK_DEFINITION_FAMILY:$latest_revision)
 
 updated_task_definition=$(echo "$existing_task_definition" | \\
-  jq --arg DOCKER_IMAGE_TAG "$BUILD_NUMBER" \\
+  jq --arg BUILD_NUMBER "$BUILD_NUMBER" \\
   \'.taskDefinition.containerDefinitions[].image |= sub(":.*$"; ":$BUILD_NUMBER")\')
 
 new_task_definition_arn=$(aws ecs register-task-definition \\
