@@ -41,7 +41,7 @@ echo "Docker image uploaded to ECR successfully!"'''
       steps {
         sh '''#!/bin/bash
 
-IMAGE_URI="${ECR_REPO}${BUILD_NUMBER}"
+IMAGE_URI="${ECR_REPO}:${BUILD_NUMBER}"
 
 latest_revision=$(aws ecs describe-task-definition \\
   --region $AWS_REGION \\
