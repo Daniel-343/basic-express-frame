@@ -8,13 +8,14 @@ pipeline {
     }
 
     stage('Build') {
+      agent any
+      environment {
+        DOCKER_IMAGE_NAME = 'basic-express-app'
+      }
       steps {
-        sh 'docker build -t "${env.DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}" .'
+        sh 'docker build -t "${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}" .'
       }
     }
 
-  }
-  environment {
-    DOCKER_IMAGE_NAME = 'basic-express-app'
   }
 }
