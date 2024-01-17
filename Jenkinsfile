@@ -35,7 +35,7 @@ echo "Docker image uploaded to ECR successfully!"'''
         AWS_REGION = 'eu-central-1'
         ECS_CLUSTER_NAME = 'express-cluster'
         ECS_SERVICE_NAME = 'express-service3'
-        ECR_REPO_ = 'public.ecr.aws/f9j9q9w9/td-ecr-343'
+        ECR_REPO = 'public.ecr.aws/f9j9q9w9/td-ecr-343'
         TASK_DEFINITION_FAMILY = 'td-express-app-task'
       }
       steps {
