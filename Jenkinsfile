@@ -23,8 +23,8 @@ pipeline {
       }
       steps {
         sh 'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f9j9q9w9'
-        sh 'docker tag $DOCKER_IMAGE_NAME:$BUILD_NUMBER public.ecr.aws/f9j9q9w9/td-ecr-343:$BUILD_NUMBER'
-        sh '''docker push public.ecr.aws/f9j9q9w9/$ECR_REPO_NAME:$BUILD_NUMBER
+        sh 'docker tag $DOCKER_IMAGE_NAME:$BUILD_NUMBER public.ecr.aws/f9j9q9w9/td-ecr-343:latest'
+        sh '''docker push public.ecr.aws/f9j9q9w9/$ECR_REPO_NAME:latest
 
 echo "Docker image uploaded to ECR successfully!"'''
       }
@@ -42,8 +42,6 @@ echo "Docker image uploaded to ECR successfully!"'''
     --region $AWS_REGION \\
     --cluster $ECS_CLUSTER_NAME \\
     --service $ECS_SERVICE_NAME \\
-    --task-definition $(aws ecs describe-services --region $AWS_REGION --cluster $ECS_CLUSTER_NAME --services $ECS_SERVICE_NAME --query \'services[0].taskDefinition\' --output text) \\
-    --desired-count $(aws ecs describe-services --region $AWS_REGION --cluster $ECS_CLUSTER_NAME --services $ECS_SERVICE_NAME --query \'services[0].desiredCount\' --output text) \\
     --force-new-deployment
 
 echo "ECS service updated with the new Docker image."'''
