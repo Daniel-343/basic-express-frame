@@ -35,11 +35,15 @@ echo "Docker image uploaded to ECR successfully!"'''
         AWS_REGION = 'eu-central-1'
         ECS_CLUSTER_NAME = 'express-cluster'
         ECS_SERVICE_NAME = 'express-service3'
-        ECR_REPO_NAME = 'td-ecr-343'
+        ECR_REPO_ = 'public.ecr.aws/f9j9q9w9/td-ecr-343'
         TASK_DEFINITION_FAMILY = 'td-express-app-task'
       }
       steps {
-        sh '''latest_revision=$(aws ecs describe-task-definition \\
+        sh '''#!/bin/bash
+
+IMAGE_URI="${ECR_REPO}${BUILD_NUMBER}"
+
+latest_revision=$(aws ecs describe-task-definition \\
   --region $AWS_REGION \\
   --task-definition $TASK_DEFINITION_FAMILY \\
   --query \'taskDefinition.revision\' \\
@@ -47,23 +51,24 @@ echo "Docker image uploaded to ECR successfully!"'''
 
 existing_task_definition=$(aws ecs describe-task-definition \\
   --region $AWS_REGION \\
-  --task-definition $TASK_DEFINITION_FAMILY:$latest_revision)
+  --task-definition $TASK_DEFINITION_FAMILY:"$latest_revision")
 
-updated_task_definition=$(echo "$existing_task_definition" | \\
-  jq --arg BUILD_NUMBER "$BUILD_NUMBER" \\
-  \'.taskDefinition.containerDefinitions[].image |= sub(":.*$"; ":$BUILD_NUMBER")\')
+updatedTaskDefinition=$(echo "$existing_task_definition" | jq ".taskDefinition.containerDefinitions[0].image = \\"${ECR_REPO}:${DOCKER_IMAGE_TAG}\\"" | jq \'.taskDefinition.revision = 22\')
 
-new_task_definition_arn=$(aws ecs register-task-definition \\
-  --region $AWS_REGION \\
-  --cli-input-json "$updated_task_definition" \\
-  --query \'taskDefinition.taskDefinitionArn\' \\
-  --output text)
 
-aws ecs update-service \\
-  --region $AWS_REGION \\
-  --cluster $ECS_CLUSTER_NAME \\
-  --service $ECS_SERVICE_NAME \\
-  --task-definition $new_task_definition_arn'''
+NEW_TASK_DEFINITION=$(echo "$updatedTaskDefinition" | jq --arg IMAGE "$IMAGE_URI" \'.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)\')
+
+#echo $updatedTaskDefinition
+
+aws ecs register-task-definition \\
+  --cli-input-json "$NEW_TASK_DEFINITION"\\
+  --family "$TASK_DEFINITION_FAMILY"\\
+
+
+
+
+echo "Task definition updated with the new image tag."
+'''
         sh '''aws ecs update-service \\
     --region $AWS_REGION \\
     --cluster $ECS_CLUSTER_NAME \\
