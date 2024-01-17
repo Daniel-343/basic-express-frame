@@ -9,9 +9,12 @@ pipeline {
 
     stage('Build') {
       steps {
-        sh 'docker build -t basic-express-frame .'
+        sh 'docker build -t "${DOCKER_IMAGE_NAME}:${env.BUILD_NUMBER}" .'
       }
     }
 
+  }
+  environment {
+    DOCKER_IMAGE_NAME = 'basic-express-app'
   }
 }
