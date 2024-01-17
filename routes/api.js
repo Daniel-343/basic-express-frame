@@ -9,6 +9,7 @@ const returnTestResponse = async (req, res) => {
             .status(200)
             .json({
                 info: "server up and running",
+                time: `${Date.now}`
             });
     } catch (error) {
         res.status(400).json({ error: error.message });
