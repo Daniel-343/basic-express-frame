@@ -9,9 +9,6 @@ pipeline {
 
     stage('Build') {
       agent any
-      environment {
-        MONGO_URL = 'MONGO_URL=mongodb+srv://danthe34:1324@cluster0.ht7868l.mongodb.net/cookie-keeper'
-      }
       steps {
         sh 'echo "$MONGO_URL" > ".env"'
         sh 'docker build -t "${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}" .'
