@@ -19,13 +19,11 @@ pipeline {
       agent any
       environment {
         AWS_REGION = 'eu-central-1'
-        AWS_ACCOUNT_ID = '610441724115'
-        ECR_REPO_NAME = 'td-ecr-343'
       }
       steps {
         sh 'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f9j9q9w9'
-        sh 'docker tag $DOCKER_IMAGE_NAME:$BUILD_NUMBER public.ecr.aws/f9j9q9w9/td-ecr-343:$BUILD_NUMBER'
-        sh '''docker push public.ecr.aws/f9j9q9w9/$ECR_REPO_NAME:$BUILD_NUMBER
+        sh 'docker tag $DOCKER_IMAGE_NAME:$BUILD_NUMBER $ECR_REPO:$BUILD_NUMBER'
+        sh '''docker push $ECR_REPO:$BUILD_NUMBER
 
 echo "Docker image uploaded to ECR successfully!"'''
       }
