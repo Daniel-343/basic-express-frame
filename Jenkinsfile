@@ -10,7 +10,6 @@ pipeline {
     stage('Build') {
       agent any
       steps {
-        sh 'echo "$MONGO_URL" > ".env"'
         sh 'docker build -t "${DOCKER_IMAGE_NAME}:${BUILD_NUMBER}" .'
       }
     }
@@ -18,11 +17,14 @@ pipeline {
     stage('Upload') {
       agent any
       steps {
-        sh 'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f9j9q9w9'
+        withCredentials([string(credentialsId: 'ECR_REPO', variable: 'ECR_REPO')]) {
+            sh 'aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/f9j9q9w9'
         sh 'docker tag $DOCKER_IMAGE_NAME:$BUILD_NUMBER $ECR_REPO:$BUILD_NUMBER'
         sh '''docker push $ECR_REPO:$BUILD_NUMBER
 
-echo "Docker image uploaded to ECR successfully!"'''
+        echo "Docker image uploaded to ECR successfully!"'''
+        }
+
       }
     }
 
@@ -33,44 +35,48 @@ echo "Docker image uploaded to ECR successfully!"'''
         TASK_DEFINITION_FAMILY = 'td-express-app-task'
       }
       steps {
+
+
+        withCredentials([string(credentialsId: 'ECR_REPO', variable: 'ECR_REPO')]) {
         sh '''#!/bin/bash
+        IMAGE_URI="${ECR_REPO}:${BUILD_NUMBER}"
 
-IMAGE_URI="${ECR_REPO}:${BUILD_NUMBER}"
+        latest_revision=$(aws ecs describe-task-definition \\
+          --region $AWS_REGION \\
+          --task-definition $TASK_DEFINITION_FAMILY \\
+          --query \'taskDefinition.revision\' \\
+          --output text)
+        
+        existing_task_definition=$(aws ecs describe-task-definition \\
+          --region $AWS_REGION \\
+          --task-definition $TASK_DEFINITION_FAMILY:"$latest_revision")
+        
+        updatedTaskDefinition=$(echo "$existing_task_definition" | jq ".taskDefinition.containerDefinitions[0].image = \\"${ECR_REPO}:${DOCKER_IMAGE_TAG}\\"" | jq \'.taskDefinition.revision = 22\')
+        
+        
+        NEW_TASK_DEFINITION=$(echo "$updatedTaskDefinition" | jq --arg IMAGE "$IMAGE_URI" \'.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)\')
+        
+        #echo $updatedTaskDefinition
+        
+        aws ecs register-task-definition \\
+          --cli-input-json "$NEW_TASK_DEFINITION"\\
+          --family "$TASK_DEFINITION_FAMILY"\\
+        
+        
+        
+        
+        echo "Task definition updated with the new image tag."
+        '''
+                sh '''aws ecs update-service \\
+            --region $AWS_REGION \\
+            --cluster $ECS_CLUSTER_NAME \\
+            --service $ECS_SERVICE_NAME \\
+            --task-definition $TASK_DEFINITION_FAMILY\\
+            --force-new-deployment
+        
+        echo "ECS service updated with the new Docker image."'''
+        }
 
-latest_revision=$(aws ecs describe-task-definition \\
-  --region $AWS_REGION \\
-  --task-definition $TASK_DEFINITION_FAMILY \\
-  --query \'taskDefinition.revision\' \\
-  --output text)
-
-existing_task_definition=$(aws ecs describe-task-definition \\
-  --region $AWS_REGION \\
-  --task-definition $TASK_DEFINITION_FAMILY:"$latest_revision")
-
-updatedTaskDefinition=$(echo "$existing_task_definition" | jq ".taskDefinition.containerDefinitions[0].image = \\"${ECR_REPO}:${DOCKER_IMAGE_TAG}\\"" | jq \'.taskDefinition.revision = 22\')
-
-
-NEW_TASK_DEFINITION=$(echo "$updatedTaskDefinition" | jq --arg IMAGE "$IMAGE_URI" \'.taskDefinition | .containerDefinitions[0].image = $IMAGE | del(.taskDefinitionArn) | del(.revision) | del(.status) | del(.requiresAttributes) | del(.compatibilities) | del(.registeredAt) | del(.registeredBy)\')
-
-#echo $updatedTaskDefinition
-
-aws ecs register-task-definition \\
-  --cli-input-json "$NEW_TASK_DEFINITION"\\
-  --family "$TASK_DEFINITION_FAMILY"\\
-
-
-
-
-echo "Task definition updated with the new image tag."
-'''
-        sh '''aws ecs update-service \\
-    --region $AWS_REGION \\
-    --cluster $ECS_CLUSTER_NAME \\
-    --service $ECS_SERVICE_NAME \\
-    --task-definition $TASK_DEFINITION_FAMILY\\
-    --force-new-deployment
-
-echo "ECS service updated with the new Docker image."'''
       }
     }
 
