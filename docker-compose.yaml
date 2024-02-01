@@ -1,0 +1,13 @@
+version: '3.3'
+
+services:
+  react-app:
+    image: daniel343/basic-react-frontend:1.0
+    ports:
+      - "3000:3000"
+    restart: always
+  express-app:
+    build: .
+    restart: always
+
+
