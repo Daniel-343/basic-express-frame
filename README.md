@@ -1,3 +1,13 @@
-This is a basic Express backend app, that can serve as a frame for any project you might want to start with an Express backend.
-It's got all the basic features any project might need, such as authentication using cookies and a MongoDB database for storing user information.
-It also comes with a fully developed Jenkins pipeline you can use to deploy your project to AWS ECS.
+## Basic express frame
+
+This is an Express.js backend application, that can be tailored to any project, should you need to use Express.js
+
+### Features
+- MongoDB database models
+- Token based authentication using cookies
+- Encrypted passwords using Bcrypt
+- Dockerized
+- Developed CI/CD pipeline with Jenkins using AWS ECS
+
+## How to use it?
+
