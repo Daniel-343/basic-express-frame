@@ -19,7 +19,6 @@ const login = async (req, res) => {
     try {
         const tokenExpireDays = 1;
         const { username, password } = req.body;
-        console.log(username + " " + password)
         const account = await User.findOne({ userName: username });
         if (!account) {
             return res.status(404).json({error: 'There is no account with this username'});
